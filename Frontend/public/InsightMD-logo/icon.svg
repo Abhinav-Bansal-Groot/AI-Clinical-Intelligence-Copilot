@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E7C86"/>
+      <stop offset="100%" stop-color="#1B4F8C"/>
+    </linearGradient>
+    <clipPath id="lensClip">
+      <circle cx="240" cy="232" r="118"/>
+    </clipPath>
+  </defs>
+
+  <!-- background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- magnifying glass handle -->
+  <line x1="330" y1="322" x2="404" y2="396" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round"/>
+
+  <!-- pulse line clipped inside the lens -->
+  <g clip-path="url(#lensClip)">
+    <circle cx="240" cy="232" r="118" fill="#0B5D66"/>
+    <polyline points="106,232 168,232 190,180 216,290 240,150 262,232 374,232"
+              fill="none" stroke="#FFFFFF" stroke-width="16"
+              stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- lens rim (drawn after fill so it sits crisp on top) -->
+  <circle cx="240" cy="232" r="118" fill="none" stroke="#FFFFFF" stroke-width="26"/>
+</svg>

@@ -1,0 +1,12 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="lensClipL"><circle cx="240" cy="232" r="118"/></clipPath>
+  </defs>
+  <g clip-path="url(#lensClipL)">
+    <circle cx="240" cy="232" r="118" fill="#EAF4F4"/>
+    <polyline points="106,232 168,232 190,180 216,290 240,150 262,232 374,232"
+              fill="none" stroke="#0E7C86" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <circle cx="240" cy="232" r="118" fill="none" stroke="#0E7C86" stroke-width="26"/>
+  <line x1="330" y1="322" x2="404" y2="396" stroke="#0E7C86" stroke-width="34" stroke-linecap="round"/>
+</svg>

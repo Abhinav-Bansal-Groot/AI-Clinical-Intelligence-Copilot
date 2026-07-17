@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic-settings
+python-dotenv
+bcrypt
+python-jose[cryptography]
+email-validator
+langchain-openai
+langchain-core
+qdrant-client
+pypdf
+python-multipart
