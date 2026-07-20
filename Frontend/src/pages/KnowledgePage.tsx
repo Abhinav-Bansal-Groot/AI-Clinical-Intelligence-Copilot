@@ -352,8 +352,7 @@ export function KnowledgePage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-50 text-violet-600">
                 <Sparkles className="h-5 w-5" />
               </div>
-              Ask anything about your guidelines or SOPs. Our AI will find answers from your
-              uploaded documents.
+              Ask anything about your guidelines or SOPs.
             </div>
           ) : (
             messages.map((message) => (

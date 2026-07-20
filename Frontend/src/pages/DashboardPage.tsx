@@ -100,17 +100,9 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Dashboard</h2>
-          <p className="text-sm text-slate-500">Quick overview.</p>
-        </div>
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search patients…"
-          className="w-full sm:w-80"
-        />
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900">Dashboard</h2>
+        <p className="text-sm text-slate-500">Quick overview.</p>
       </div>
 
       {error ? (
@@ -137,8 +129,14 @@ export function DashboardPage() {
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 bg-slate-800 px-4 py-3">
+        <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-base font-semibold text-white">Recent Patients</h3>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search patients…"
+            className="w-full sm:w-72"
+          />
         </div>
 
         <div className="overflow-x-auto">

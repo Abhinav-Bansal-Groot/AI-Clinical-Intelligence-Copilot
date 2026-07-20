@@ -185,27 +185,19 @@ export function AppLayout() {
         <header className="sticky top-0 z-20 flex h-14 items-center justify-end gap-1 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:gap-2 sm:px-5">
           <button
             type="button"
-            className="relative rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+            className="relative cursor-pointer rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
             aria-label="Notifications"
             title="Notifications"
           >
             <Bell className="h-5 w-5" />
             <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-teal-500" />
           </button>
-          <button
-            type="button"
-            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
-            aria-label="Settings"
-            title="Settings"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
 
           <div className="relative ml-1" ref={menuRef}>
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-600 text-xs font-semibold text-white transition hover:bg-teal-700"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-teal-600 text-xs font-semibold text-white transition hover:bg-teal-700"
               aria-expanded={menuOpen}
               aria-haspopup="menu"
               aria-label="Account menu"
@@ -225,7 +217,7 @@ export function AppLayout() {
                 <button
                   type="button"
                   role="menuitem"
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50"
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50"
                   onClick={() => {
                     setMenuOpen(false)
                   }}
@@ -237,7 +229,7 @@ export function AppLayout() {
                   type="button"
                   role="menuitem"
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 transition hover:bg-red-50"
+                  className="flex w-full cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-sm text-red-600 transition hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4" />
                   Logout

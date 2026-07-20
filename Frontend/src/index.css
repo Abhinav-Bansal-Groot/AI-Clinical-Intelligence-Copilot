@@ -35,3 +35,20 @@ body {
   color: var(--color-ink);
   background: var(--color-surface);
 }
+
+button:not(:disabled),
+a,
+[role='button']:not([aria-disabled='true']),
+summary,
+label[for],
+input[type='file'],
+input[type='checkbox'],
+input[type='radio'],
+select {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+}
