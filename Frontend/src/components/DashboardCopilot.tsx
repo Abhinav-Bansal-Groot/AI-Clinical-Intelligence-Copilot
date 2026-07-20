@@ -295,7 +295,7 @@ export function DashboardCopilot() {
                 </button>
               </div>
               <p className="mt-2 text-center text-[10px] text-slate-400">
-                Clinical decision support only. Verify before acting.
+                Clinical decision support only. Please Verify before acting.
               </p>
             </form>
           </aside>

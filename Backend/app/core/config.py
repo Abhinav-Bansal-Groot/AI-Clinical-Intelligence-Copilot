@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 
-    qdrant_url: str = ""
+    qdrant_url: str = "http://localhost:6333"
     qdrant_api_key: str = ""
     qdrant_collection_name: str = "clinical_knowledge"
     qdrant_vector_size: int = 1536

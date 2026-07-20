@@ -34,7 +34,7 @@ class KnowledgeService:
         self._validate_configuration()
         self.client = QdrantClient(
             url=self.settings.qdrant_url,
-            api_key=self.settings.qdrant_api_key,
+            api_key=self.settings.qdrant_api_key or None,
         )
         self.embeddings = OpenAIEmbeddings(
             api_key=self.settings.openai_api_key,
@@ -213,8 +213,8 @@ class KnowledgeService:
     def _validate_configuration(self) -> None:
         if not self.settings.openai_api_key:
             raise KnowledgeConfigurationError("OpenAI API key is not configured")
-        if not self.settings.qdrant_url or not self.settings.qdrant_api_key:
-            raise KnowledgeConfigurationError("Qdrant configuration is not complete")
+        if not self.settings.qdrant_url:
+            raise KnowledgeConfigurationError("Qdrant URL is not configured")
 
     def _ensure_collection(self) -> None:
         collection_names = {
