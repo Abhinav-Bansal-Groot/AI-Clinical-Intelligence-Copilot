@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import { streamCopilotChat } from '../api/copilot'
 import { listPatients, getPatient } from '../api/patients'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { MarkdownText } from '../components/MarkdownText'
+import { SearchInput } from '../components/SearchInput'
 import type { PatientDetail, PatientListItem } from '../types'
 import { getPatientName } from '../utils/patient'
 
@@ -31,8 +33,8 @@ function createId() {
 
 function riskBadgeClass(risk: string | null) {
   const value = (risk || '').toLowerCase()
-  if (value === 'high') return 'bg-rose-50 text-rose-700 ring-rose-200'
-  if (value === 'medium') return 'bg-amber-50 text-amber-700 ring-amber-200'
+  if (value === 'high') return 'bg-red-50 text-red-700 ring-red-200'
+  if (value === 'medium') return 'bg-orange-50 text-orange-700 ring-orange-200'
   return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
 }
 
@@ -202,11 +204,11 @@ export function CopilotPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-11rem)] flex-col gap-4 overflow-hidden">
+    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-3 overflow-hidden">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">Patient Copilot</h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Patient Copilot</h2>
+          <p className="text-sm text-slate-500">
             Ask clinical questions, identify care gaps, and generate notes for a selected patient.
           </p>
         </div>
@@ -221,50 +223,53 @@ export function CopilotPage() {
       </div>
 
       {error ? (
-        <div className="shrink-0 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       {!patientIdParam ? (
         <section className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="bg-slate-800 px-5 py-4">
-            <h3 className="text-lg font-semibold text-white">Select a patient</h3>
-            <p className="mt-1 text-sm text-slate-300">
+          <div className="bg-slate-800 px-4 py-3">
+            <h3 className="text-base font-semibold text-white">Select a patient</h3>
+            <p className="mt-0.5 text-sm text-slate-300">
               Choose a patient to start the AI clinical chat.
             </p>
           </div>
-          <div className="h-[calc(100%-5.5rem)] overflow-y-auto p-5">
-          <input
-            type="search"
+          <div className="h-[calc(100%-4.5rem)] overflow-y-auto p-4">
+          <SearchInput
             value={patientSearch}
-            onChange={(event) => setPatientSearch(event.target.value)}
-            placeholder="Search patient by name"
-            className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none ring-teal-600/20 transition focus:border-teal-600 focus:ring-4 sm:max-w-md"
+            onChange={setPatientSearch}
+            placeholder="Search patients…"
+            className="sm:max-w-md"
           />
-          <div className="mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200">
+          <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
             {patientOptions.length === 0 ? (
               <p className="px-4 py-6 text-sm text-slate-500">No patients found.</p>
             ) : (
               patientOptions.map((patient) => (
-                <button
+                <div
                   key={patient.id}
-                  type="button"
-                  onClick={() => selectPatient(patient.id)}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-teal-50/50"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3"
                 >
-                  <div>
-                    <p className="font-medium text-slate-900">{getPatientName(patient)}</p>
+                  <div className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => selectPatient(patient.id)}
+                      className="cursor-pointer text-left font-medium text-slate-900 hover:text-teal-700 hover:underline"
+                    >
+                      {getPatientName(patient)}
+                    </button>
                     <p className="text-xs text-slate-500">
                       Age {patient.age ?? '—'} · {patient.conditions || 'No conditions listed'}
                     </p>
                   </div>
                   <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ring-inset ${riskBadgeClass(patient.risk_level)}`}
+                    className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ring-inset ${riskBadgeClass(patient.risk_level)}`}
                   >
                     {patient.risk_level || 'Unknown'}
                   </span>
-                </button>
+                </div>
               ))
             )}
           </div>
@@ -276,14 +281,17 @@ export function CopilotPage() {
         </div>
       ) : selectedPatient ? (
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="shrink-0 border-b border-slate-200 px-5 py-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="shrink-0 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 px-5 py-5 text-white">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-500">Chatting about</p>
-                <p className="text-lg font-semibold text-slate-900">
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                  <Sparkles className="h-5 w-5 text-violet-300" />
+                  Chatting about
+                </h3>
+                <p className="mt-1 text-base font-semibold text-white">
                   {getPatientName(selectedPatient)}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="mt-0.5 text-sm text-slate-300">
                   Age {selectedPatient.age ?? '—'} · {selectedPatient.conditions || 'No conditions'}
                 </p>
               </div>
@@ -297,7 +305,7 @@ export function CopilotPage() {
                   setMessages([])
                   setSelectedPatient(null)
                 }}
-                className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/15 sm:shrink-0"
               >
                 Change patient
               </button>
@@ -310,7 +318,7 @@ export function CopilotPage() {
                   type="button"
                   disabled={streaming}
                   onClick={() => void sendMessage(prompt)}
-                  className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-800 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-fit max-w-full rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2 text-left text-xs font-medium text-slate-100 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {prompt}
                 </button>
@@ -318,9 +326,12 @@ export function CopilotPage() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {messages.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              <div className="flex h-full min-h-[140px] flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-500">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-50 text-violet-600">
+                  <Sparkles className="h-5 w-5" />
+                </div>
                 Ask a question or tap a suggested prompt to begin.
               </div>
             ) : (
@@ -330,8 +341,8 @@ export function CopilotPage() {
                   className={[
                     'rounded-2xl px-4 py-3 text-sm leading-6',
                     message.role === 'user'
-                      ? 'ml-auto w-fit max-w-[75%] bg-teal-700 text-white whitespace-pre-wrap'
-                      : 'mr-auto w-fit max-w-[75%] border border-teal-200 bg-teal-50 text-teal-900',
+                      ? 'ml-auto w-fit max-w-[75%] bg-teal-600 text-white whitespace-pre-wrap'
+                      : 'mr-auto w-fit max-w-[75%] border border-teal-100 bg-teal-50 text-teal-950',
                   ].join(' ')}
                 >
                   <MarkdownText content={message.content || (streaming ? '…' : '')} />
@@ -341,22 +352,25 @@ export function CopilotPage() {
             <div ref={bottomRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="shrink-0 border-t border-slate-200 p-4">
+          <form onSubmit={handleSubmit} className="shrink-0 border-t border-slate-200 p-3">
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                disabled={streaming}
-                placeholder="Ask about this patient…"
-                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm outline-none ring-teal-600/20 transition focus:border-teal-600 focus:ring-4 disabled:bg-slate-50"
-              />
+              <div className="relative min-w-0 flex-1">
+                <Sparkles className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-violet-500" />
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  disabled={streaming}
+                  placeholder="Ask about this patient…"
+                  className="w-full rounded-xl border border-slate-200 py-2.5 pr-3.5 pl-9 text-sm outline-none ring-violet-500/20 transition focus:border-violet-500 focus:ring-4 disabled:bg-slate-50"
+                />
+              </div>
               <button
                 type="submit"
                 disabled={streaming || !input.trim()}
-                className="rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-violet-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {streaming ? '…' : 'Send'}
+                {streaming ? '…' : 'Ask →'}
               </button>
             </div>
           </form>

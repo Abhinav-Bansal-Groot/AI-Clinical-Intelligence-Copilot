@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -24,11 +25,15 @@ class InsightsService:
         self.patient_repository = PatientRepository(db)
         self.appointment_repository = AppointmentRepository(db)
 
-    def get_summary(self) -> InsightsSummary:
-        revenue_rows = self.claim_repository.get_revenue_trend()
-        status_counts = self.claim_repository.count_by_status()
-        risk_rows = self.patient_repository.count_by_risk_level()
-        no_show_rows = self.appointment_repository.get_no_show_trend()
+    def get_summary(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> InsightsSummary:
+        revenue_rows = self.claim_repository.get_revenue_trend(start_date, end_date)
+        status_counts = self.claim_repository.count_by_status(start_date, end_date)
+        risk_rows = self.patient_repository.count_by_risk_level(start_date, end_date)
+        no_show_rows = self.appointment_repository.get_no_show_trend(start_date, end_date)
 
         no_show_trend = [
             NoShowTrendPoint(week=f"W{index}", week_start=week_start, rate=rate)
@@ -47,14 +52,16 @@ class InsightsService:
                 denied=status_counts.get("denied", 0),
             ),
             high_risk_patients=HighRiskPatientsSummary(
-                total=self.patient_repository.count_high_risk(),
+                total=self.patient_repository.count_high_risk(start_date, end_date),
                 by_level=[
                     RiskLevelCount(risk_level=level, count=count)
                     for level, count in risk_rows
                 ],
             ),
             ai_insight=AiInsight(
-                claims_change_percent=self._compute_claims_change_percent(),
+                claims_change_percent=self._compute_claims_change_percent(
+                    start_date, end_date
+                ),
                 no_shows_change_percent=self._compute_no_shows_change_percent(
                     [point.rate for point in no_show_trend]
                 ),
@@ -62,8 +69,12 @@ class InsightsService:
             ),
         )
 
-    def _compute_claims_change_percent(self) -> float:
-        amounts = self.claim_repository.get_claim_amounts_ordered()
+    def _compute_claims_change_percent(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> float:
+        amounts = self.claim_repository.get_claim_amounts_ordered(start_date, end_date)
         if len(amounts) < 2:
             return 0.0
 
