@@ -16,7 +16,7 @@ from app.schemas.insights import (
     RiskLevelCount,
 )
 
-STATIC_RECOMMENDATION = "Recommend reminder campaign."
+STATIC_RECOMMENDATION = ""
 
 
 class InsightsService:
