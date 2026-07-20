@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -46,20 +48,33 @@ class PatientRepository:
         stmt = select(func.count()).select_from(Patient)
         return self.db.execute(stmt).scalar_one()
 
-    def count_high_risk(self) -> int:
+    def count_high_risk(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> int:
         stmt = select(func.count()).select_from(Patient).where(
             func.lower(Patient.risk_level) == "high"
         )
+        if start_date is not None:
+            stmt = stmt.where(Patient.last_visit >= start_date)
+        if end_date is not None:
+            stmt = stmt.where(Patient.last_visit <= end_date)
         return self.db.execute(stmt).scalar_one()
 
-    def count_by_risk_level(self) -> list[tuple[str, int]]:
-        stmt = (
-            select(
-                func.coalesce(Patient.risk_level, "Unknown"),
-                func.count(),
-            )
-            .group_by(func.coalesce(Patient.risk_level, "Unknown"))
-            .order_by(func.count().desc())
-        )
+    def count_by_risk_level(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[tuple[str, int]]:
+        stmt = select(
+            func.coalesce(Patient.risk_level, "Unknown"),
+            func.count(),
+        ).group_by(func.coalesce(Patient.risk_level, "Unknown"))
+        if start_date is not None:
+            stmt = stmt.where(Patient.last_visit >= start_date)
+        if end_date is not None:
+            stmt = stmt.where(Patient.last_visit <= end_date)
+        stmt = stmt.order_by(func.count().desc())
         rows = self.db.execute(stmt).all()
         return [(str(level), int(count)) for level, count in rows]

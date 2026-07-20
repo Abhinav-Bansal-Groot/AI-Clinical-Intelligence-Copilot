@@ -2,14 +2,17 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
-import { login as loginRequest } from '../api/auth'
+import { getCurrentUser, login as loginRequest } from '../api/auth'
+import type { AuthUser } from '../types'
 
 type AuthState = {
   token: string | null
+  user: AuthUser | null
 }
 
 type AuthContextValue = AuthState & {
@@ -25,27 +28,68 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 function loadStoredAuth(): AuthState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { token: null }
-    const parsed = JSON.parse(raw) as AuthState
-    return { token: parsed.token ?? null }
+    if (!raw) return { token: null, user: null }
+    const parsed = JSON.parse(raw) as Partial<AuthState>
+    return {
+      token: parsed.token ?? null,
+      user: parsed.user ?? null,
+    }
   } catch {
-    return { token: null }
+    return { token: null, user: null }
   }
+}
+
+function persistAuth(next: AuthState) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState>(() => loadStoredAuth())
+  const [profileLoaded, setProfileLoaded] = useState(Boolean(auth.user) || !auth.token)
+
+  useEffect(() => {
+    if (!auth.token || profileLoaded) return
+
+    let cancelled = false
+
+    const loadUser = async () => {
+      try {
+        const user = await getCurrentUser(auth.token!)
+        if (cancelled) return
+        const next = { token: auth.token, user }
+        persistAuth(next)
+        setAuth(next)
+      } catch {
+        // Keep session; avatar falls back to initials.
+      } finally {
+        if (!cancelled) setProfileLoaded(true)
+      }
+    }
+
+    void loadUser()
+    return () => {
+      cancelled = true
+    }
+  }, [auth.token, profileLoaded])
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await loginRequest(email, password)
-    const next = { token: data.access_token }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    let user: AuthUser | null = null
+    try {
+      user = await getCurrentUser(data.access_token)
+    } catch {
+      user = null
+    }
+    const next = { token: data.access_token, user }
+    persistAuth(next)
     setAuth(next)
+    setProfileLoaded(true)
   }, [])
 
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
-    setAuth({ token: null })
+    setAuth({ token: null, user: null })
+    setProfileLoaded(true)
   }, [])
 
   const value = useMemo(

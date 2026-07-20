@@ -2,6 +2,13 @@ export type LoginResponse = {
   access_token: string
 }
 
+export type AuthUser = {
+  id: number
+  full_name: string
+  email: string
+  role: string
+}
+
 export type DashboardSummary = {
   total_patients: number
   high_risk_patients: number

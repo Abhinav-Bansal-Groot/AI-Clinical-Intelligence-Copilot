@@ -233,45 +233,48 @@ export function DashboardCopilot() {
               </button>
             </header>
 
-            <div className="shrink-0 border-b border-slate-200 px-4 py-3">
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    disabled={streaming}
-                    onClick={() => void sendMessage(suggestion)}
-                    className="shrink-0 rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-800 transition hover:bg-teal-100 disabled:opacity-50"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {error ? (
-              <div className="shrink-0 border-b border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">
+              <div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-2 text-xs text-red-700">
                 {error}
               </div>
             ) : null}
 
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-slate-50 px-4 py-5">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-5">
               {messages.length === 0 ? (
                 <p className="text-center text-sm text-slate-500">Starting AI Copilot…</p>
               ) : (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={[
-                      'w-fit max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm',
-                      message.role === 'user'
-                        ? 'ml-auto bg-teal-700 text-white'
-                        : 'mr-auto border border-slate-200 bg-white text-slate-800',
-                    ].join(' ')}
-                  >
-                    <MarkdownText content={message.content || (streaming ? '…' : '')} />
-                  </div>
-                ))
+                <>
+                  {messages.map((message, index) => (
+                    <div key={message.id}>
+                      <div
+                        className={[
+                          'w-fit max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm',
+                          message.role === 'user'
+                            ? 'ml-auto bg-teal-700 text-white'
+                            : 'mr-auto border border-slate-200 bg-white text-slate-800',
+                        ].join(' ')}
+                      >
+                        <MarkdownText content={message.content || (streaming ? '…' : '')} />
+                      </div>
+
+                      {index === 0 && message.role === 'assistant' ? (
+                        <div className="mt-3 flex flex-col items-end gap-2">
+                          {suggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              disabled={streaming}
+                              onClick={() => void sendMessage(suggestion)}
+                              className="w-fit max-w-[90%] rounded-2xl border border-teal-200 bg-white px-3.5 py-2 text-left text-xs font-medium text-teal-800 shadow-sm transition hover:bg-teal-50 disabled:opacity-50"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </>
               )}
               <div ref={bottomRef} />
             </div>

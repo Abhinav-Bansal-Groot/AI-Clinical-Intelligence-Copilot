@@ -8,9 +8,14 @@
   --color-brand-600: #0d9488;
   --color-brand-700: #0f766e;
   --color-brand-800: #115e59;
+  --color-info: #2563eb;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-ai: #0d9488;
   --color-ink: #0f172a;
   --color-muted: #64748b;
-  --color-surface: #f8fafc;
+  --color-surface: #f1f5f9;
   --color-line: #e2e8f0;
 }
 

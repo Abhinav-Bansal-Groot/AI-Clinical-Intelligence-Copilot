@@ -1,5 +1,4 @@
 from datetime import date
-from decimal import Decimal
 
 from sqlalchemy import case, cast, func, select
 from sqlalchemy.orm import Session
@@ -12,7 +11,11 @@ class AppointmentRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def get_no_show_trend(self) -> list[tuple[date, float]]:
+    def get_no_show_trend(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[tuple[date, float]]:
         """Return weekly no-show rates for completed + no_show appointments."""
         week_start = func.date_trunc("week", Appointment.appointment_date)
 
@@ -32,6 +35,10 @@ class AppointmentRepository:
             .group_by(week_start)
             .order_by(week_start.asc())
         )
+        if start_date is not None:
+            stmt = stmt.where(Appointment.appointment_date >= start_date)
+        if end_date is not None:
+            stmt = stmt.where(Appointment.appointment_date <= end_date)
 
         rows = self.db.execute(stmt).all()
         result: list[tuple[date, float]] = []
