@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  FileUp,
   LayoutDashboard,
   LogOut,
   MessageSquareText,
@@ -20,6 +21,7 @@ const navItems = [
   { to: '/patients', label: 'Patients', icon: Users },
   { to: '/copilot', label: 'Patient Copilot', icon: MessageSquareText },
   { to: '/knowledge', label: 'Knowledge Assistant', icon: BookOpen },
+  { to: '/import-documents', label: 'Import Documents', icon: FileUp },
   { to: '/insights', label: 'Insights', icon: BarChart3 },
 ]
 

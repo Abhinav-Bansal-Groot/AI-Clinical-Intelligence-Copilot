@@ -227,7 +227,105 @@ export function InsightsPage() {
     return noShowData[noShowData.length - 1].rate - noShowData[0].rate
   }, [noShowData])
 
-  const aiInsight = revenueQuery.summary?.ai_insight
+  const approvedClaims = denialData.find((d) => d.key === 'approved')
+  const pendingClaims = denialData.find((d) => d.key === 'pending')
+  const deniedClaims = denialData.find((d) => d.key === 'denied')
+  const highRisk = riskData.find((d) => d.risk_level.toLowerCase() === 'high')
+  const mediumRisk = riskData.find((d) => d.risk_level.toLowerCase() === 'medium')
+  const lowRisk = riskData.find((d) => d.risk_level.toLowerCase() === 'low')
+
+  const insightSummary = useMemo(() => {
+    const lines: string[] = []
+
+    if (revenueData.length > 0) {
+      lines.push(
+        `Revenue totals ${formatCurrency(totalRevenue)} across the selected period` +
+          (revenueData.length > 1
+            ? `, ${revenueChange >= 0 ? 'up' : 'down'} ${Math.abs(revenueChange).toFixed(1)}% from first to latest point.`
+            : '.'),
+      )
+    } else {
+      lines.push('No revenue data is available for the selected revenue filter.')
+    }
+
+    if (noShowData.length > 0) {
+      lines.push(
+        `Average no-show rate is ${avgNoShow.toFixed(1)}% over ${noShowData.length} week${noShowData.length === 1 ? '' : 's'}` +
+          (noShowData.length > 1
+            ? ` (${noShowChange <= 0 ? 'improved' : 'worsened'} by ${Math.abs(noShowChange).toFixed(1)} pts vs first week).`
+            : '.'),
+      )
+    } else {
+      lines.push('No no-show trend data is available for the selected filter.')
+    }
+
+    if (claimTotal > 0) {
+      lines.push(
+        `Claims: ${approvedClaims?.value ?? 0} approved (${approvedClaims?.percent ?? 0}%), ` +
+          `${pendingClaims?.value ?? 0} pending (${pendingClaims?.percent ?? 0}%), ` +
+          `${deniedClaims?.value ?? 0} denied (${deniedClaims?.percent ?? 0}%) — ${claimTotal.toLocaleString()} total.`,
+      )
+    } else {
+      lines.push('No claim status data is available for the selected filter.')
+    }
+
+    if (riskTotal > 0) {
+      lines.push(
+        `Patient risk: ${highRisk?.count ?? 0} high (${highRisk?.percent ?? 0}%), ` +
+          `${mediumRisk?.count ?? 0} medium (${mediumRisk?.percent ?? 0}%), ` +
+          `${lowRisk?.count ?? 0} low (${lowRisk?.percent ?? 0}%) — ${riskTotal.toLocaleString()} patients.`,
+      )
+    } else {
+      lines.push('No patient risk data is available for the selected filter.')
+    }
+
+    const recommendations: string[] = []
+    if ((deniedClaims?.percent ?? 0) >= 15) {
+      recommendations.push('Review denied claims to reduce revenue leakage.')
+    }
+    if ((pendingClaims?.percent ?? 0) >= 25) {
+      recommendations.push('Clear pending claims backlog to improve cash flow.')
+    }
+    if (avgNoShow >= 15) {
+      recommendations.push('Run a reminder campaign to lower no-show rates.')
+    }
+    if ((highRisk?.percent ?? 0) >= 20 || (highRisk?.count ?? 0) >= 10) {
+      recommendations.push('Prioritize outreach for high-risk patients.')
+    }
+    if (recommendations.length === 0) {
+      recommendations.push('Trends look stable — continue monitoring weekly.')
+    }
+
+    return { lines, recommendation: recommendations.join(' ') }
+  }, [
+    revenueData.length,
+    totalRevenue,
+    revenueChange,
+    noShowData.length,
+    avgNoShow,
+    noShowChange,
+    claimTotal,
+    approvedClaims,
+    pendingClaims,
+    deniedClaims,
+    riskTotal,
+    highRisk,
+    mediumRisk,
+    lowRisk,
+  ])
+
+  const anySummaryLoaded = Boolean(
+    revenueQuery.summary ||
+      noShowQuery.summary ||
+      claimsQuery.summary ||
+      riskQuery.summary,
+  )
+
+  const allLoading =
+    revenueQuery.loading &&
+    noShowQuery.loading &&
+    claimsQuery.loading &&
+    riskQuery.loading
 
   return (
     <div className="space-y-4">
@@ -246,27 +344,22 @@ export function InsightsPage() {
         </div>
       ) : null}
 
-      {aiInsight ? (
+      {anySummaryLoaded ? (
         <section className="rounded-2xl border border-teal-200 bg-teal-50/70 px-4 py-3 shadow-sm">
           <p className="text-xs font-semibold tracking-wide text-teal-800 uppercase">
             AI Insight
           </p>
-          <ul className="mt-2 space-y-1 text-sm text-teal-950">
-            <li>
-              Claims{' '}
-              {aiInsight.claims_change_percent >= 0 ? 'increased' : 'decreased'}{' '}
-              <span className="font-semibold">
-                {Math.abs(aiInsight.claims_change_percent)}%
-              </span>
-            </li>
-            <li>
-              No-shows changed by{' '}
-              <span className="font-semibold">{aiInsight.no_shows_change_percent}%</span>
-            </li>
-            <li className="font-medium">{aiInsight.recommendation}</li>
+          <p className="mt-1 text-xs text-teal-700/80">
+            Live summary from the charts below (uses each chart’s selected date filter).
+          </p>
+          <ul className="mt-2 space-y-1.5 text-sm text-teal-950">
+            {insightSummary.lines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+            <li className="font-medium text-teal-900">{insightSummary.recommendation}</li>
           </ul>
         </section>
-      ) : revenueQuery.loading ? (
+      ) : allLoading ? (
         <section className="rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500 shadow-sm">
           Loading insights…
         </section>

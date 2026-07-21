@@ -4,6 +4,7 @@ import { AppLayout } from './components/AppLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { CopilotPage } from './pages/CopilotPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { ImportDocumentsPage } from './pages/ImportDocumentsPage'
 import { InsightsPage } from './pages/InsightsPage'
 import { KnowledgePage } from './pages/KnowledgePage'
 import { LoginPage } from './pages/LoginPage'
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="patients" element={<PatientsPage />} />
               <Route path="copilot" element={<CopilotPage />} />
               <Route path="knowledge" element={<KnowledgePage />} />
+              <Route path="import-documents" element={<ImportDocumentsPage />} />
               <Route path="insights" element={<InsightsPage />} />
             </Route>
           </Route>
