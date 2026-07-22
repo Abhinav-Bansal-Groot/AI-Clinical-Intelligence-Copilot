@@ -8,6 +8,7 @@ import { useAuth } from '../auth/AuthContext'
 import { MarkdownText } from '../components/MarkdownText'
 import { SearchInput } from '../components/SearchInput'
 import { useTypewriterReveal } from '../hooks/useTypewriterReveal'
+import { useChatAutoScroll } from '../hooks/useChatAutoScroll'
 import type { PatientDetail, PatientListItem } from '../types'
 import { getPatientName } from '../utils/patient'
 
@@ -56,8 +57,11 @@ export function CopilotPage() {
   const [error, setError] = useState('')
 
   const abortRef = useRef<AbortController | null>(null)
-  const bottomRef = useRef<HTMLDivElement | null>(null)
   const typewriter = useTypewriterReveal(12)
+  const { containerRef, bottomRef, handleScroll, pinToBottom } = useChatAutoScroll([
+    messages,
+    streaming,
+  ])
 
   useEffect(() => {
     preservedCopilotMessages = messages
@@ -68,10 +72,6 @@ export function CopilotPage() {
       setSearchParams({ patientId: preservedCopilotPatientId }, { replace: true })
     }
   }, [patientIdParam, setSearchParams])
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [messages, streaming])
 
   useEffect(() => {
     if (!token || !patientIdParam) {
@@ -156,6 +156,7 @@ export function CopilotPage() {
 
     setError('')
     setInput('')
+    pinToBottom()
     const userMessage: ChatMessage = { id: createId(), role: 'user', content: trimmed }
     const assistantId = createId()
     setMessages((prev) => [
@@ -339,7 +340,11 @@ export function CopilotPage() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <div
+            ref={containerRef}
+            onScroll={handleScroll}
+            className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4"
+          >
             {messages.length === 0 ? (
               <div className="flex h-full min-h-[140px] flex-col items-center justify-center gap-2 px-4 text-center text-sm text-slate-500">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-50 text-violet-600">

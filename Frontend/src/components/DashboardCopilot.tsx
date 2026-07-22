@@ -6,6 +6,7 @@ import {
 } from '../api/dashboardCopilot'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { useChatAutoScroll } from '../hooks/useChatAutoScroll'
 import { useTypewriterReveal } from '../hooks/useTypewriterReveal'
 import { MarkdownText } from './MarkdownText'
 
@@ -44,8 +45,11 @@ export function DashboardCopilot() {
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
-  const bottomRef = useRef<HTMLDivElement | null>(null)
   const typewriter = useTypewriterReveal(12)
+  const { containerRef, bottomRef, handleScroll, pinToBottom } = useChatAutoScroll([
+    messages,
+    streaming,
+  ])
 
   useEffect(() => {
     preservedDashboardMessages = messages
@@ -99,10 +103,6 @@ export function DashboardCopilot() {
   }, [open, token, messages.length])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [messages, streaming])
-
-  useEffect(() => {
     if (!open) return
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
@@ -124,6 +124,7 @@ export function DashboardCopilot() {
 
     setInput('')
     setError('')
+    pinToBottom()
     setStreaming(true)
     setMessages((current) => [
       ...current,
@@ -248,7 +249,11 @@ export function DashboardCopilot() {
               </div>
             ) : null}
 
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-5">
+            <div
+              ref={containerRef}
+              onScroll={handleScroll}
+              className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-5"
+            >
               {messages.length === 0 ? (
                 <p className="text-center text-sm text-slate-500">Starting AI Copilot…</p>
               ) : (
