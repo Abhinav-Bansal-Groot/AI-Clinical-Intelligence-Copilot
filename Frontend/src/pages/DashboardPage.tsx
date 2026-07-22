@@ -92,7 +92,7 @@ export function DashboardPage() {
         label: 'Claims Pending',
         value: summary?.claims_pending ?? '—',
         hint: 'Awaiting review',
-        valueClassName: 'text-blue-700',
+        valueClassName: 'text-[#D97706]',
       },
     ],
     [summary],
