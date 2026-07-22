@@ -216,7 +216,7 @@ export function CopilotPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4.5rem)] flex-col gap-3 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
       <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight text-slate-900">Patient Copilot</h2>
@@ -241,7 +241,7 @@ export function CopilotPage() {
       ) : null}
 
       {!patientIdParam ? (
-        <section className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-3 bg-slate-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-semibold text-white">Select a patient</h3>
@@ -256,7 +256,7 @@ export function CopilotPage() {
               className="w-full sm:w-72"
             />
           </div>
-          <div className="h-[calc(100%-4.5rem)] overflow-y-auto p-4">
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
             <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
               {patientOptions.length === 0 ? (
                 <p className="px-4 py-6 text-sm text-slate-500">No patients found.</p>

@@ -136,10 +136,10 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
       <aside
         className={[
-          'sticky top-0 flex h-screen shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200',
+          'flex h-full shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200',
           collapsed ? 'w-[72px]' : 'w-60',
         ].join(' ')}
       >
@@ -221,8 +221,8 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-end gap-1 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:gap-2 sm:px-5">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="z-20 flex h-14 shrink-0 items-center justify-end gap-1 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:gap-2 sm:px-5">
           <div className="relative" ref={notificationsRef}>
             <button
               type="button"
@@ -313,7 +313,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-4 sm:px-5">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-5">
           <Outlet />
         </main>
       </div>
