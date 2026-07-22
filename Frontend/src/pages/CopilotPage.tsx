@@ -7,6 +7,7 @@ import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { MarkdownText } from '../components/MarkdownText'
 import { SearchInput } from '../components/SearchInput'
+import { useTypewriterReveal } from '../hooks/useTypewriterReveal'
 import type { PatientDetail, PatientListItem } from '../types'
 import { getPatientName } from '../utils/patient'
 
@@ -56,6 +57,7 @@ export function CopilotPage() {
 
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  const typewriter = useTypewriterReveal(12)
 
   useEffect(() => {
     preservedCopilotMessages = messages
@@ -167,6 +169,14 @@ export function CopilotPage() {
     const controller = new AbortController()
     abortRef.current = controller
 
+    typewriter.start(assistantId, (messageId, visibleText) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, content: visibleText } : msg,
+        ),
+      )
+    })
+
     try {
       await streamCopilotChat({
         token,
@@ -174,15 +184,16 @@ export function CopilotPage() {
         message: trimmed,
         signal: controller.signal,
         onToken: (tokenText) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantId ? { ...msg, content: msg.content + tokenText } : msg,
-            ),
-          )
+          typewriter.push(tokenText)
         },
       })
+      await typewriter.finish()
     } catch (err) {
-      if (controller.signal.aborted) return
+      if (controller.signal.aborted) {
+        if (abortRef.current === controller) typewriter.reset()
+        return
+      }
+      typewriter.reset()
       const detail =
         err instanceof ApiError ? err.message : 'Failed to generate AI response. Please try again.'
       setError(detail)
@@ -194,7 +205,7 @@ export function CopilotPage() {
         ),
       )
     } finally {
-      setStreaming(false)
+      if (abortRef.current === controller) setStreaming(false)
     }
   }
 
@@ -230,49 +241,51 @@ export function CopilotPage() {
 
       {!patientIdParam ? (
         <section className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="bg-slate-800 px-4 py-3">
-            <h3 className="text-base font-semibold text-white">Select a patient</h3>
-            <p className="mt-0.5 text-sm text-slate-300">
-              Choose a patient to start the AI clinical chat.
-            </p>
+          <div className="flex flex-col gap-3 bg-slate-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-white">Select a patient</h3>
+              <p className="mt-0.5 text-sm text-slate-300">
+                Choose a patient to start the AI clinical chat.
+              </p>
+            </div>
+            <SearchInput
+              value={patientSearch}
+              onChange={setPatientSearch}
+              placeholder="Search patients…"
+              className="w-full sm:w-72"
+            />
           </div>
           <div className="h-[calc(100%-4.5rem)] overflow-y-auto p-4">
-          <SearchInput
-            value={patientSearch}
-            onChange={setPatientSearch}
-            placeholder="Search patients…"
-            className="sm:max-w-md"
-          />
-          <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200">
-            {patientOptions.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-slate-500">No patients found.</p>
-            ) : (
-              patientOptions.map((patient) => (
-                <div
-                  key={patient.id}
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => selectPatient(patient.id)}
-                      className="cursor-pointer text-left font-medium text-slate-900 hover:text-teal-700 hover:underline"
-                    >
-                      {getPatientName(patient)}
-                    </button>
-                    <p className="text-xs text-slate-500">
-                      Age {patient.age ?? '—'} · {patient.conditions || 'No conditions listed'}
-                    </p>
-                  </div>
-                  <span
-                    className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ring-inset ${riskBadgeClass(patient.risk_level)}`}
+            <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+              {patientOptions.length === 0 ? (
+                <p className="px-4 py-6 text-sm text-slate-500">No patients found.</p>
+              ) : (
+                patientOptions.map((patient) => (
+                  <div
+                    key={patient.id}
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3"
                   >
-                    {patient.risk_level || 'Unknown'}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+                    <div className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => selectPatient(patient.id)}
+                        className="cursor-pointer text-left font-medium text-slate-900 hover:text-teal-700 hover:underline"
+                      >
+                        {getPatientName(patient)}
+                      </button>
+                      <p className="text-xs text-slate-500">
+                        Age {patient.age ?? '—'} · {patient.conditions || 'No conditions listed'}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ring-1 ring-inset ${riskBadgeClass(patient.risk_level)}`}
+                    >
+                      {patient.risk_level || 'Unknown'}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </section>
       ) : loadingPatient ? (

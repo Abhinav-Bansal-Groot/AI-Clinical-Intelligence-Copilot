@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 class KnowledgeUploadResponse(BaseModel):
     uploaded_documents: int
     indexed_chunks: int
-    collection_name: str
 
 
 class KnowledgeChatMessage(BaseModel):

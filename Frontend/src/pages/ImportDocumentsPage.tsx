@@ -3,8 +3,8 @@ import {
   CheckCircle2,
   CloudUpload,
   FileText,
+  Trash2,
   Upload,
-  X,
 } from 'lucide-react'
 import { ApiError } from '../api/client'
 import { uploadKnowledgePdfs } from '../api/knowledge'
@@ -126,7 +126,7 @@ export function ImportDocumentsPage() {
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-slate-900">Import Documents</h2>
         <p className="text-sm text-slate-500">
-          Upload one or more clinical guidelines, SOPs, and protocols to the knowledge base.
+          Upload documents to the knowledge base.
         </p>
       </div>
 
@@ -144,7 +144,7 @@ export function ImportDocumentsPage() {
           <div>
             <h3 className="text-base font-semibold text-slate-900">Upload PDFs</h3>
             <p className="text-xs text-slate-500">
-              Supported format: PDF (clinical guidelines, SOPs, protocols). Select multiple files.
+              Supported format: PDF (clinical guidelines, SOPs, policies).
             </p>
           </div>
         </div>
@@ -221,7 +221,7 @@ export function ImportDocumentsPage() {
                   key={`${file.name}-${file.size}-${index}`}
                   className="flex items-center gap-3 rounded-xl border border-teal-100 bg-teal-50/60 px-3 py-2"
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <FileText className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -232,11 +232,11 @@ export function ImportDocumentsPage() {
                     type="button"
                     onClick={() => removeSelectedFile(index)}
                     disabled={uploading}
-                    className="rounded-md p-1 text-slate-500 transition hover:bg-white hover:text-slate-800 disabled:opacity-50"
+                    className="rounded-md p-1 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                     aria-label={`Remove ${file.name}`}
                     title="Remove"
                   >
-                    <X className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </li>
               ))}
@@ -251,7 +251,7 @@ export function ImportDocumentsPage() {
                   className="rounded-xl border border-slate-200 bg-white px-3 py-3"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                       <FileText className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">

@@ -83,7 +83,6 @@ class KnowledgeService:
         return KnowledgeUploadResponse(
             uploaded_documents=uploaded_documents,
             indexed_chunks=indexed_chunks,
-            collection_name=self.settings.qdrant_collection_name,
         )
 
     def prepare_query(

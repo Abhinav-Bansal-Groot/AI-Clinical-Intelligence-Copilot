@@ -4,6 +4,7 @@ import { ApiError } from '../api/client'
 import { streamKnowledgeQuery } from '../api/knowledge'
 import { useAuth } from '../auth/AuthContext'
 import { MarkdownText } from '../components/MarkdownText'
+import { useTypewriterReveal } from '../hooks/useTypewriterReveal'
 
 type ChatMessage = {
   id: string
@@ -42,6 +43,7 @@ export function KnowledgePage() {
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  const typewriter = useTypewriterReveal(12)
 
   useEffect(() => {
     preservedKnowledgeMessages = messages
@@ -76,6 +78,14 @@ export function KnowledgePage() {
     const controller = new AbortController()
     abortRef.current = controller
 
+    typewriter.start(assistantId, (messageId, visibleText) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, content: visibleText } : msg,
+        ),
+      )
+    })
+
     try {
       await streamKnowledgeQuery({
         token,
@@ -83,15 +93,16 @@ export function KnowledgePage() {
         history,
         signal: controller.signal,
         onToken: (tokenText) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === assistantId ? { ...msg, content: msg.content + tokenText } : msg,
-            ),
-          )
+          typewriter.push(tokenText)
         },
       })
+      await typewriter.finish()
     } catch (err) {
-      if (controller.signal.aborted) return
+      if (controller.signal.aborted) {
+        if (abortRef.current === controller) typewriter.reset()
+        return
+      }
+      typewriter.reset()
       setError(err instanceof ApiError ? err.message : 'Failed to query knowledge base.')
       setMessages((prev) =>
         prev.map((msg) =>
@@ -104,7 +115,7 @@ export function KnowledgePage() {
         ),
       )
     } finally {
-      setStreaming(false)
+      if (abortRef.current === controller) setStreaming(false)
     }
   }
 

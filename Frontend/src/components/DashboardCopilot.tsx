@@ -6,6 +6,7 @@ import {
 } from '../api/dashboardCopilot'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { useTypewriterReveal } from '../hooks/useTypewriterReveal'
 import { MarkdownText } from './MarkdownText'
 
 type ChatMessage = DashboardCopilotMessage & {
@@ -44,6 +45,7 @@ export function DashboardCopilot() {
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
+  const typewriter = useTypewriterReveal(12)
 
   useEffect(() => {
     preservedDashboardMessages = messages
@@ -133,6 +135,14 @@ export function DashboardCopilot() {
     const controller = new AbortController()
     abortRef.current = controller
 
+    typewriter.start(assistantId, (messageId, visibleText) => {
+      setMessages((current) =>
+        current.map((item) =>
+          item.id === messageId ? { ...item, content: visibleText } : item,
+        ),
+      )
+    })
+
     try {
       await streamDashboardCopilot({
         token,
@@ -140,17 +150,16 @@ export function DashboardCopilot() {
         history,
         signal: controller.signal,
         onToken: (tokenText) => {
-          setMessages((current) =>
-            current.map((item) =>
-              item.id === assistantId
-                ? { ...item, content: item.content + tokenText }
-                : item,
-            ),
-          )
+          typewriter.push(tokenText)
         },
       })
+      await typewriter.finish()
     } catch (err) {
-      if (controller.signal.aborted) return
+      if (controller.signal.aborted) {
+        if (abortRef.current === controller) typewriter.reset()
+        return
+      }
+      typewriter.reset()
       setError(err instanceof ApiError ? err.message : 'AI Copilot is unavailable.')
       setMessages((current) =>
         current.map((item) =>
@@ -163,7 +172,7 @@ export function DashboardCopilot() {
         ),
       )
     } finally {
-      setStreaming(false)
+      if (abortRef.current === controller) setStreaming(false)
     }
   }
 

@@ -51,7 +51,6 @@ export type PatientDetail = {
 export type KnowledgeUploadResponse = {
   uploaded_documents: number
   indexed_chunks: number
-  collection_name: string
 }
 
 export type KnowledgeChatMessage = {

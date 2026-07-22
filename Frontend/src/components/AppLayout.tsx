@@ -9,7 +9,6 @@ import {
   LogOut,
   MessageSquareText,
   PanelLeft,
-  Settings,
   Users,
   BarChart3,
 } from 'lucide-react'
@@ -25,7 +24,7 @@ const navItems = [
   { to: '/insights', label: 'Insights', icon: BarChart3 },
 ]
 
-const SIDEBAR_KEY = 'cic_sidebar_collapsed'
+const SIDEBAR_KEY = 'cic_sidebar_collapsed_v2'
 
 const SAMPLE_NOTIFICATIONS = [
   {
@@ -63,10 +62,10 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(() => {
     try {
       const stored = localStorage.getItem(SIDEBAR_KEY)
-      if (stored === null) return true
+      if (stored === null) return false
       return stored === '1'
     } catch {
-      return true
+      return false
     }
   })
   const [menuOpen, setMenuOpen] = useState(false)
@@ -225,7 +224,7 @@ export function AppLayout() {
               title="Notifications"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-teal-500" />
+              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
             </button>
 
             {notificationsOpen ? (
@@ -286,8 +285,7 @@ export function AppLayout() {
                     setMenuOpen(false)
                   }}
                 >
-                  <Settings className="h-4 w-4 text-slate-400" />
-                  Settings
+
                 </button>
                 <button
                   type="button"
