@@ -152,7 +152,7 @@ export function KnowledgePage() {
               Ask for Assistance
             </h3>
             <p className="mt-1 text-sm text-slate-300">
-              Get instant answers from your clinical guidelines, SOPs, and protocols.
+              Get instant answers from your clinical guidelines, SOPs and policies.
             </p>
           </div>
 

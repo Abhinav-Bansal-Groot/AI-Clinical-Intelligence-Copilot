@@ -23,14 +23,18 @@ import {
   Clock3,
   XCircle,
 } from 'lucide-react'
-import { getInsightsSummary } from '../api/insights'
+import {
+  getClaimDenials,
+  getHighRiskPatients,
+  getNoShowTrend,
+  getRevenueTrend,
+} from '../api/insights'
 import { useAuth } from '../auth/AuthContext'
 import {
   createPresetRange,
   DateRangeFilter,
   type DateRangeValue,
 } from '../components/DateRangeFilter'
-import type { InsightsSummary } from '../types'
 
 const DENIAL_COLORS = {
   approved: '#10b981',
@@ -80,8 +84,15 @@ function ChartHeader({
   )
 }
 
-function useInsightsForRange(token: string | null, range: DateRangeValue) {
-  const [summary, setSummary] = useState<InsightsSummary | null>(null)
+function useInsightsSection<T>(
+  token: string | null,
+  range: DateRangeValue,
+  fetcher: (
+    authToken: string,
+    query: { startDate?: string | null; endDate?: string | null },
+  ) => Promise<T>,
+) {
+  const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -94,15 +105,15 @@ function useInsightsForRange(token: string | null, range: DateRangeValue) {
       setLoading(true)
       setError('')
       try {
-        const data = await getInsightsSummary(token, {
+        const result = await fetcher(token, {
           startDate: range.startDate,
           endDate: range.endDate,
         })
-        if (!cancelled) setSummary(data)
+        if (!cancelled) setData(result)
       } catch {
         if (!cancelled) {
           setError('Failed to load insights for this date range.')
-          setSummary(null)
+          setData(null)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -115,7 +126,7 @@ function useInsightsForRange(token: string | null, range: DateRangeValue) {
     }
   }, [token, range.preset, range.startDate, range.endDate])
 
-  return { summary, loading, error }
+  return { data, loading, error }
 }
 
 export function InsightsPage() {
@@ -125,22 +136,22 @@ export function InsightsPage() {
   const [claimsRange, setClaimsRange] = useState(() => createPresetRange('all'))
   const [riskRange, setRiskRange] = useState(() => createPresetRange('all'))
 
-  const revenueQuery = useInsightsForRange(token, revenueRange)
-  const noShowQuery = useInsightsForRange(token, noShowRange)
-  const claimsQuery = useInsightsForRange(token, claimsRange)
-  const riskQuery = useInsightsForRange(token, riskRange)
+  const revenueQuery = useInsightsSection(token, revenueRange, getRevenueTrend)
+  const noShowQuery = useInsightsSection(token, noShowRange, getNoShowTrend)
+  const claimsQuery = useInsightsSection(token, claimsRange, getClaimDenials)
+  const riskQuery = useInsightsSection(token, riskRange, getHighRiskPatients)
 
   const pageError =
     revenueQuery.error || noShowQuery.error || claimsQuery.error || riskQuery.error
 
   const revenueData = useMemo(
     () =>
-      (revenueQuery.summary?.revenue_trend ?? []).map((point) => ({
+      (revenueQuery.data ?? []).map((point) => ({
         date: point.date,
         label: formatShortDate(point.date),
         amount: Number(point.amount),
       })),
-    [revenueQuery.summary],
+    [revenueQuery.data],
   )
 
   const totalRevenue = useMemo(
@@ -156,8 +167,8 @@ export function InsightsPage() {
   }, [revenueData])
 
   const denialData = useMemo(() => {
-    if (!claimsQuery.summary) return []
-    const { approved, pending, denied } = claimsQuery.summary.claim_denials
+    if (!claimsQuery.data) return []
+    const { approved, pending, denied } = claimsQuery.data
     const total = approved + pending + denied || 1
     return [
       {
@@ -179,7 +190,7 @@ export function InsightsPage() {
         percent: Math.round((denied / total) * 100),
       },
     ]
-  }, [claimsQuery.summary])
+  }, [claimsQuery.data])
 
   const claimTotal = useMemo(
     () => denialData.reduce((sum, item) => sum + item.value, 0),
@@ -187,7 +198,7 @@ export function InsightsPage() {
   )
 
   const riskData = useMemo(() => {
-    const levels = riskQuery.summary?.high_risk_patients.by_level ?? []
+    const levels = riskQuery.data?.by_level ?? []
     const order = ['High', 'Medium', 'Low']
     const sorted = [...levels].sort(
       (a, b) => order.indexOf(a.risk_level) - order.indexOf(b.risk_level),
@@ -200,7 +211,7 @@ export function InsightsPage() {
       percent: Math.round((item.count / total) * 100),
       color: RISK_COLORS[item.risk_level.toLowerCase()] ?? '#64748b',
     }))
-  }, [riskQuery.summary])
+  }, [riskQuery.data])
 
   const riskTotal = useMemo(
     () => riskData.reduce((sum, item) => sum + item.count, 0),
@@ -209,12 +220,12 @@ export function InsightsPage() {
 
   const noShowData = useMemo(
     () =>
-      (noShowQuery.summary?.no_show_trend ?? []).map((point) => ({
+      (noShowQuery.data ?? []).map((point) => ({
         week: point.week,
         week_start: point.week_start,
         rate: Number(point.rate),
       })),
-    [noShowQuery.summary],
+    [noShowQuery.data],
   )
 
   const avgNoShow = useMemo(() => {
@@ -286,10 +297,7 @@ export function InsightsPage() {
   ])
 
   const anySummaryLoaded = Boolean(
-    revenueQuery.summary ||
-      noShowQuery.summary ||
-      claimsQuery.summary ||
-      riskQuery.summary,
+    revenueQuery.data || noShowQuery.data || claimsQuery.data || riskQuery.data,
   )
 
   const allLoading =
@@ -365,7 +373,7 @@ export function InsightsPage() {
                     <CheckCircle2 className="h-3 w-3" /> Paid
                   </p>
                   <p className="text-sm font-semibold text-emerald-800">
-                    {revenueQuery.summary?.claim_denials.approved ?? 0}
+                    {claimsQuery.data?.approved ?? 0}
                   </p>
                 </div>
                 <div className="rounded-xl bg-amber-50 px-2.5 py-1.5">
@@ -373,7 +381,7 @@ export function InsightsPage() {
                     <Clock3 className="h-3 w-3" /> Pending
                   </p>
                   <p className="text-sm font-semibold text-amber-800">
-                    {revenueQuery.summary?.claim_denials.pending ?? 0}
+                    {claimsQuery.data?.pending ?? 0}
                   </p>
                 </div>
                 <div className="rounded-xl bg-red-50 px-2.5 py-1.5">
@@ -381,7 +389,7 @@ export function InsightsPage() {
                     <XCircle className="h-3 w-3" /> Denied
                   </p>
                   <p className="text-sm font-semibold text-red-800">
-                    {revenueQuery.summary?.claim_denials.denied ?? 0}
+                    {claimsQuery.data?.denied ?? 0}
                   </p>
                 </div>
               </div>
@@ -607,7 +615,7 @@ export function InsightsPage() {
                         <div>
                           <p className="text-sm font-medium text-slate-800">{item.name}</p>
                           <p className="text-xs text-slate-500">
-                            {item.value.toLocaleString()} · {item.percent}%
+                            {item.value.toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -682,7 +690,7 @@ export function InsightsPage() {
                       <div className="mb-1 flex items-center justify-between text-sm">
                         <span className="font-medium text-slate-800">{item.risk_level}</span>
                         <span className="text-xs text-slate-500">
-                          {item.count} · {item.percent}%
+                          {item.count}
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-slate-100">

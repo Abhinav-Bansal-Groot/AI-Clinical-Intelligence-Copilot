@@ -144,7 +144,7 @@ export function ImportDocumentsPage() {
           <div>
             <h3 className="text-base font-semibold text-slate-900">Upload PDFs</h3>
             <p className="text-xs text-slate-500">
-              Supported format: PDF (clinical guidelines, SOPs, policies).
+              Supported documents: PDF (clinical guidelines, SOPs and policies).
             </p>
           </div>
         </div>

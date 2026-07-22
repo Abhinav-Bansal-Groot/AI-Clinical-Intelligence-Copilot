@@ -56,28 +56,40 @@ function getInitials(name: string | undefined, email: string | undefined) {
   return 'DR'
 }
 
+function loadUserCollapsedPreference(): boolean {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_KEY)
+    if (stored === null) return false
+    return stored === '1'
+  } catch {
+    return false
+  }
+}
+
+function isSmallViewport() {
+  return window.matchMedia('(max-width: 1023px)').matches
+}
+
 export function AppLayout() {
   const { logout, user } = useAuth()
   const navigate = useNavigate()
-  const [collapsed, setCollapsed] = useState(() => {
-    try {
-      const stored = localStorage.getItem(SIDEBAR_KEY)
-      if (stored === null) return false
-      return stored === '1'
-    } catch {
-      return false
-    }
-  })
+  const userCollapsedRef = useRef(loadUserCollapsedPreference())
+  const [collapsed, setCollapsed] = useState(() =>
+    isSmallViewport() ? true : userCollapsedRef.current,
+  )
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const notificationsRef = useRef<HTMLDivElement | null>(null)
-  const userCollapsedRef = useRef(collapsed)
 
-  useEffect(() => {
-    userCollapsedRef.current = collapsed
-    localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0')
-  }, [collapsed])
+  const persistUserPreference = (value: boolean) => {
+    userCollapsedRef.current = value
+    try {
+      localStorage.setItem(SIDEBAR_KEY, value ? '1' : '0')
+    } catch {
+      // ignore storage errors
+    }
+  }
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1023px)')
@@ -118,7 +130,7 @@ export function AppLayout() {
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
       const next = !prev
-      userCollapsedRef.current = next
+      persistUserPreference(next)
       return next
     })
   }
@@ -150,7 +162,7 @@ export function AppLayout() {
             <button
               type="button"
               onClick={() => {
-                userCollapsedRef.current = true
+                persistUserPreference(true)
                 setCollapsed(true)
               }}
               className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"

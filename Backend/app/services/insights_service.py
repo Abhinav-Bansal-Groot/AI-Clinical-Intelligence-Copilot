@@ -25,39 +25,66 @@ class InsightsService:
         self.patient_repository = PatientRepository(db)
         self.appointment_repository = AppointmentRepository(db)
 
+    def get_revenue_trend(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[RevenueTrendPoint]:
+        revenue_rows = self.claim_repository.get_revenue_trend(start_date, end_date)
+        return [
+            RevenueTrendPoint(date=claim_date, amount=amount)
+            for claim_date, amount in revenue_rows
+        ]
+
+    def get_no_show_trend(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[NoShowTrendPoint]:
+        no_show_rows = self.appointment_repository.get_no_show_trend(start_date, end_date)
+        return [
+            NoShowTrendPoint(week=f"W{index}", week_start=week_start, rate=rate)
+            for index, (week_start, rate) in enumerate(no_show_rows, start=1)
+        ]
+
+    def get_claim_denials(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> ClaimDenialsSummary:
+        status_counts = self.claim_repository.count_by_status(start_date, end_date)
+        return ClaimDenialsSummary(
+            approved=status_counts.get("approved", 0),
+            pending=status_counts.get("pending", 0),
+            denied=status_counts.get("denied", 0),
+        )
+
+    def get_high_risk_patients(
+        self,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> HighRiskPatientsSummary:
+        risk_rows = self.patient_repository.count_by_risk_level(start_date, end_date)
+        return HighRiskPatientsSummary(
+            total=self.patient_repository.count_high_risk(start_date, end_date),
+            by_level=[
+                RiskLevelCount(risk_level=level, count=count)
+                for level, count in risk_rows
+            ],
+        )
+
     def get_summary(
         self,
         start_date: date | None = None,
         end_date: date | None = None,
     ) -> InsightsSummary:
-        revenue_rows = self.claim_repository.get_revenue_trend(start_date, end_date)
-        status_counts = self.claim_repository.count_by_status(start_date, end_date)
-        risk_rows = self.patient_repository.count_by_risk_level(start_date, end_date)
-        no_show_rows = self.appointment_repository.get_no_show_trend(start_date, end_date)
-
-        no_show_trend = [
-            NoShowTrendPoint(week=f"W{index}", week_start=week_start, rate=rate)
-            for index, (week_start, rate) in enumerate(no_show_rows, start=1)
-        ]
+        no_show_trend = self.get_no_show_trend(start_date, end_date)
 
         return InsightsSummary(
-            revenue_trend=[
-                RevenueTrendPoint(date=claim_date, amount=amount)
-                for claim_date, amount in revenue_rows
-            ],
+            revenue_trend=self.get_revenue_trend(start_date, end_date),
             no_show_trend=no_show_trend,
-            claim_denials=ClaimDenialsSummary(
-                approved=status_counts.get("approved", 0),
-                pending=status_counts.get("pending", 0),
-                denied=status_counts.get("denied", 0),
-            ),
-            high_risk_patients=HighRiskPatientsSummary(
-                total=self.patient_repository.count_high_risk(start_date, end_date),
-                by_level=[
-                    RiskLevelCount(risk_level=level, count=count)
-                    for level, count in risk_rows
-                ],
-            ),
+            claim_denials=self.get_claim_denials(start_date, end_date),
+            high_risk_patients=self.get_high_risk_patients(start_date, end_date),
             ai_insight=AiInsight(
                 claims_change_percent=self._compute_claims_change_percent(
                     start_date, end_date
