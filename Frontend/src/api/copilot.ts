@@ -1,4 +1,4 @@
-import { ApiError } from './client'
+import { ApiError, notifyUnauthorized } from './client'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
 
@@ -22,6 +22,7 @@ export async function streamCopilotChat({
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      'ngrok-skip-browser-warning': 'true',
     },
     body: JSON.stringify({
       patient_id: patientId,
@@ -31,6 +32,9 @@ export async function streamCopilotChat({
   })
 
   if (!response.ok) {
+    if (response.status === 401) {
+      notifyUnauthorized()
+    }
     let detail = 'Failed to get AI response'
     try {
       const data = await response.json()

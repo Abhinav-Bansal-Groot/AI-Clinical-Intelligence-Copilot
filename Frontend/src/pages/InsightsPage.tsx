@@ -231,87 +231,58 @@ export function InsightsPage() {
   const pendingClaims = denialData.find((d) => d.key === 'pending')
   const deniedClaims = denialData.find((d) => d.key === 'denied')
   const highRisk = riskData.find((d) => d.risk_level.toLowerCase() === 'high')
-  const mediumRisk = riskData.find((d) => d.risk_level.toLowerCase() === 'medium')
-  const lowRisk = riskData.find((d) => d.risk_level.toLowerCase() === 'low')
 
   const insightSummary = useMemo(() => {
-    const lines: string[] = []
+    const metricsParts: string[] = []
 
     if (revenueData.length > 0) {
-      lines.push(
-        `Revenue totals ${formatCurrency(totalRevenue)} across the selected period` +
-          (revenueData.length > 1
-            ? `, ${revenueChange >= 0 ? 'up' : 'down'} ${Math.abs(revenueChange).toFixed(1)}% from first to latest point.`
-            : '.'),
+      metricsParts.push(
+        `Revenue ${formatCurrency(totalRevenue)} (${revenueChange >= 0 ? '+' : ''}${revenueChange.toFixed(1)}%)`,
       )
-    } else {
-      lines.push('No revenue data is available for the selected revenue filter.')
     }
-
     if (noShowData.length > 0) {
-      lines.push(
-        `Average no-show rate is ${avgNoShow.toFixed(1)}% over ${noShowData.length} week${noShowData.length === 1 ? '' : 's'}` +
-          (noShowData.length > 1
-            ? ` (${noShowChange <= 0 ? 'improved' : 'worsened'} by ${Math.abs(noShowChange).toFixed(1)} pts vs first week).`
-            : '.'),
-      )
-    } else {
-      lines.push('No no-show trend data is available for the selected filter.')
+      metricsParts.push(`No-show avg ${avgNoShow.toFixed(1)}%`)
     }
-
     if (claimTotal > 0) {
-      lines.push(
-        `Claims: ${approvedClaims?.value ?? 0} approved (${approvedClaims?.percent ?? 0}%), ` +
-          `${pendingClaims?.value ?? 0} pending (${pendingClaims?.percent ?? 0}%), ` +
-          `${deniedClaims?.value ?? 0} denied (${deniedClaims?.percent ?? 0}%) — ${claimTotal.toLocaleString()} total.`,
+      metricsParts.push(
+        `Claims ${approvedClaims?.percent ?? 0}% approved / ${deniedClaims?.percent ?? 0}% denied`,
       )
-    } else {
-      lines.push('No claim status data is available for the selected filter.')
     }
-
     if (riskTotal > 0) {
-      lines.push(
-        `Patient risk: ${highRisk?.count ?? 0} high (${highRisk?.percent ?? 0}%), ` +
-          `${mediumRisk?.count ?? 0} medium (${mediumRisk?.percent ?? 0}%), ` +
-          `${lowRisk?.count ?? 0} low (${lowRisk?.percent ?? 0}%) — ${riskTotal.toLocaleString()} patients.`,
+      metricsParts.push(
+        `${highRisk?.count ?? 0} high-risk of ${riskTotal.toLocaleString()} patients`,
       )
-    } else {
-      lines.push('No patient risk data is available for the selected filter.')
     }
 
-    const recommendations: string[] = []
+    const line1 =
+      metricsParts.length > 0
+        ? metricsParts.join(' · ')
+        : 'No chart data available for the selected filters.'
+
+    let line2 = 'Trends look stable — continue monitoring weekly.'
     if ((deniedClaims?.percent ?? 0) >= 15) {
-      recommendations.push('Review denied claims to reduce revenue leakage.')
-    }
-    if ((pendingClaims?.percent ?? 0) >= 25) {
-      recommendations.push('Clear pending claims backlog to improve cash flow.')
-    }
-    if (avgNoShow >= 15) {
-      recommendations.push('Run a reminder campaign to lower no-show rates.')
-    }
-    if ((highRisk?.percent ?? 0) >= 20 || (highRisk?.count ?? 0) >= 10) {
-      recommendations.push('Prioritize outreach for high-risk patients.')
-    }
-    if (recommendations.length === 0) {
-      recommendations.push('Trends look stable — continue monitoring weekly.')
+      line2 = 'Focus: review denied claims to reduce revenue leakage.'
+    } else if ((pendingClaims?.percent ?? 0) >= 25) {
+      line2 = 'Focus: clear pending claims backlog to improve cash flow.'
+    } else if (avgNoShow >= 15) {
+      line2 = 'Focus: run a reminder campaign to lower no-show rates.'
+    } else if ((highRisk?.percent ?? 0) >= 20 || (highRisk?.count ?? 0) >= 10) {
+      line2 = 'Focus: prioritize outreach for high-risk patients.'
     }
 
-    return { lines, recommendation: recommendations.join(' ') }
+    return { line1, line2 }
   }, [
     revenueData.length,
     totalRevenue,
     revenueChange,
     noShowData.length,
     avgNoShow,
-    noShowChange,
     claimTotal,
     approvedClaims,
     pendingClaims,
     deniedClaims,
     riskTotal,
     highRisk,
-    mediumRisk,
-    lowRisk,
   ])
 
   const anySummaryLoaded = Boolean(
@@ -349,15 +320,8 @@ export function InsightsPage() {
           <p className="text-xs font-semibold tracking-wide text-teal-800 uppercase">
             AI Insight
           </p>
-          <p className="mt-1 text-xs text-teal-700/80">
-            Live summary from the charts below (uses each chart’s selected date filter).
-          </p>
-          <ul className="mt-2 space-y-1.5 text-sm text-teal-950">
-            {insightSummary.lines.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-            <li className="font-medium text-teal-900">{insightSummary.recommendation}</li>
-          </ul>
+          <p className="mt-2 text-sm text-teal-950">{insightSummary.line1}</p>
+          <p className="mt-1 text-sm font-medium text-teal-900">{insightSummary.line2}</p>
         </section>
       ) : allLoading ? (
         <section className="rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500 shadow-sm">

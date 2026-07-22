@@ -13,13 +13,16 @@ router = APIRouter()
 @router.post("/chat/stream")
 def copilot_chat_stream(
     payload: CopilotChatRequest,
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     copilot_service: CopilotService = Depends(get_copilot_service),
 ) -> StreamingResponse:
     try:
         messages = copilot_service.prepare_chat(
             patient_id=payload.patient_id,
             message=payload.message,
+            doctor_name=current_user.full_name,
+            doctor_role=current_user.role,
+            doctor_email=current_user.email,
         )
     except PatientNotFoundError as exc:
         raise HTTPException(

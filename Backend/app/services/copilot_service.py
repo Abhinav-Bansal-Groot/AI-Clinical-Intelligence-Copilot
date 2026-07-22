@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.repositories.patient_repository import PatientRepository
 from app.schemas.patient import PatientDetail
-from app.services.copilot_prompts import SYSTEM_PROMPT, build_patient_context
+from app.services.copilot_prompts import (
+    SYSTEM_PROMPT,
+    build_patient_context,
+    build_practice_context,
+)
 from app.services.patient_service import PatientNotFoundError
 
 
@@ -21,7 +25,15 @@ class CopilotService:
         self.settings = get_settings()
         self.patient_repository = PatientRepository(db)
 
-    def prepare_chat(self, patient_id: int, message: str) -> list[BaseMessage]:
+    def prepare_chat(
+        self,
+        patient_id: int,
+        message: str,
+        *,
+        doctor_name: str,
+        doctor_role: str,
+        doctor_email: str,
+    ) -> list[BaseMessage]:
         if not self.settings.openai_api_key:
             raise CopilotConfigurationError("OpenAI API key is not configured")
 
@@ -31,9 +43,16 @@ class CopilotService:
 
         patient_detail = PatientDetail.model_validate(patient)
         patient_context = build_patient_context(patient_detail)
+        practice_context = build_practice_context(
+            doctor_name=doctor_name,
+            doctor_role=doctor_role,
+            doctor_email=doctor_email,
+        )
 
         return [
-            SystemMessage(content=f"{SYSTEM_PROMPT}\n\n{patient_context}"),
+            SystemMessage(
+                content=f"{SYSTEM_PROMPT}\n\n{practice_context}\n\n{patient_context}"
+            ),
             HumanMessage(content=message.strip()),
         ]
 

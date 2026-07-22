@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+const AUTH_STORAGE_KEY = 'cic_auth'
 
 export class ApiError extends Error {
   status: number
@@ -6,6 +7,26 @@ export class ApiError extends Error {
   constructor(message: string, status: number) {
     super(message)
     this.status = status
+  }
+}
+
+type UnauthorizedHandler = () => void
+
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+  unauthorizedHandler = handler
+}
+
+export function notifyUnauthorized() {
+  try {
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+  } catch {
+    // ignore storage errors
+  }
+  unauthorizedHandler?.()
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.assign('/login')
   }
 }
 
@@ -43,6 +64,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   })
 
   if (!response.ok) {
+    if (response.status === 401 && options.token) {
+      notifyUnauthorized()
+    }
+
     let detail = 'Request failed'
     try {
       const data = await response.json()
@@ -59,3 +84,5 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   return response.json() as Promise<T>
 }
+
+export { API_BASE_URL, AUTH_STORAGE_KEY }

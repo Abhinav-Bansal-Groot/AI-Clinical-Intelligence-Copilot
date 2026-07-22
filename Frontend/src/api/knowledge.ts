@@ -1,11 +1,11 @@
-import { apiRequest, ApiError } from './client'
+import { apiRequest, ApiError, API_BASE_URL, notifyUnauthorized } from './client'
 import type { KnowledgeChatMessage, KnowledgeUploadResponse } from '../types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
-
-export function uploadKnowledgePdf(token: string, file: File) {
+export function uploadKnowledgePdfs(token: string, files: File[]) {
   const formData = new FormData()
-  formData.append('file', file)
+  for (const file of files) {
+    formData.append('files', file)
+  }
 
   return apiRequest<KnowledgeUploadResponse>('/api/v1/knowledge/upload', {
     method: 'POST',
@@ -44,6 +44,9 @@ export async function streamKnowledgeQuery({
   })
 
   if (!response.ok) {
+    if (response.status === 401) {
+      notifyUnauthorized()
+    }
     let detail = 'Failed to query knowledge base'
     try {
       const data = await response.json()

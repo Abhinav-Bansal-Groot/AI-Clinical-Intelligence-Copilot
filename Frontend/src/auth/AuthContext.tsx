@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { getCurrentUser, login as loginRequest } from '../api/auth'
+import { ApiError, AUTH_STORAGE_KEY, setUnauthorizedHandler } from '../api/client'
 import type { AuthUser } from '../types'
 
 type AuthState = {
@@ -21,13 +22,11 @@ type AuthContextValue = AuthState & {
   isAuthenticated: boolean
 }
 
-const STORAGE_KEY = 'cic_auth'
-
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 function loadStoredAuth(): AuthState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY)
     if (!raw) return { token: null, user: null }
     const parsed = JSON.parse(raw) as Partial<AuthState>
     return {
@@ -40,12 +39,26 @@ function loadStoredAuth(): AuthState {
 }
 
 function persistAuth(next: AuthState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(next))
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState>(() => loadStoredAuth())
   const [profileLoaded, setProfileLoaded] = useState(Boolean(auth.user) || !auth.token)
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(AUTH_STORAGE_KEY)
+    setAuth({ token: null, user: null })
+    setProfileLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setAuth({ token: null, user: null })
+      setProfileLoaded(true)
+    })
+    return () => setUnauthorizedHandler(null)
+  }, [])
 
   useEffect(() => {
     if (!auth.token || profileLoaded) return
@@ -59,8 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const next = { token: auth.token, user }
         persistAuth(next)
         setAuth(next)
-      } catch {
-        // Keep session; avatar falls back to initials.
+      } catch (err) {
+        if (cancelled) return
+        if (err instanceof ApiError && err.status === 401) {
+          logout()
+          return
+        }
+        // Keep session for non-auth failures; avatar falls back to initials.
       } finally {
         if (!cancelled) setProfileLoaded(true)
       }
@@ -70,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [auth.token, profileLoaded])
+  }, [auth.token, profileLoaded, logout])
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await loginRequest(email, password)
@@ -83,12 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const next = { token: data.access_token, user }
     persistAuth(next)
     setAuth(next)
-    setProfileLoaded(true)
-  }, [])
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY)
-    setAuth({ token: null, user: null })
     setProfileLoaded(true)
   }, [])
 

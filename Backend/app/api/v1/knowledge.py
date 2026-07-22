@@ -19,24 +19,29 @@ router = APIRouter()
 @router.post(
     "/upload",
     response_model=KnowledgeUploadResponse,
-    summary="Upload PDF from your device",
+    summary="Upload one or more PDFs from your device",
 )
 async def upload_knowledge_documents(
-    file: Annotated[
-        UploadFile,
-        File(description="PDF file from your computer (Choose File)"),
+    files: Annotated[
+        list[UploadFile],
+        File(description="One or more PDF files from your computer"),
     ],
     _: User = Depends(get_current_user),
     knowledge_service: KnowledgeService = Depends(get_knowledge_service),
 ) -> KnowledgeUploadResponse:
     try:
-        if not file.filename or not file.filename.lower().endswith(".pdf"):
-            raise KnowledgeDocumentError("Only PDF uploads are supported")
+        if not files:
+            raise KnowledgeDocumentError("At least one PDF file is required")
 
-        content = await file.read()
-        uploaded_files = [
-            UploadedKnowledgeFile(filename=file.filename, content=content),
-        ]
+        uploaded_files: list[UploadedKnowledgeFile] = []
+        for file in files:
+            if not file.filename or not file.filename.lower().endswith(".pdf"):
+                raise KnowledgeDocumentError("Only PDF uploads are supported")
+            content = await file.read()
+            uploaded_files.append(
+                UploadedKnowledgeFile(filename=file.filename, content=content)
+            )
+
         return knowledge_service.upload_documents(uploaded_files)
     except KnowledgeDocumentError as exc:
         raise HTTPException(
