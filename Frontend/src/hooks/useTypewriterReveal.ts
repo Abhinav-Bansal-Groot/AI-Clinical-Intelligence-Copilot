@@ -17,7 +17,7 @@ type TypewriterControls = {
  * Smooth high-speed typewriter reveal for streamed chat tokens.
  * Tokens can arrive in bursts; the UI paints them steadily like ChatGPT.
  */
-export function useTypewriterReveal(charsPerFrame = 10): TypewriterControls {
+export function useTypewriterReveal(charsPerFrame = 1): TypewriterControls {
   const targetRef = useRef('')
   const visibleRef = useRef('')
   const messageIdRef = useRef<string | null>(null)

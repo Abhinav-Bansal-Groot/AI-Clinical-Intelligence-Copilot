@@ -43,7 +43,7 @@ export function KnowledgePage() {
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
-  const typewriter = useTypewriterReveal(12)
+  const typewriter = useTypewriterReveal(1)
   const { containerRef, bottomRef, handleScroll, pinToBottom } = useChatAutoScroll([
     messages,
     streaming,
