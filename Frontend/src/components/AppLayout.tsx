@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Bell,
   BookOpen,
-  ChevronLeft,
   ChevronRight,
   FileUp,
   LayoutDashboard,
@@ -146,7 +145,7 @@ export function AppLayout() {
         <div
           className={[
             'flex items-center border-b border-slate-200 px-3',
-            collapsed ? 'h-14 justify-center' : 'h-20 justify-between gap-2',
+            collapsed ? 'h-14 justify-center' : 'h-20',
           ].join(' ')}
         >
           {collapsed ? (
@@ -158,19 +157,6 @@ export function AppLayout() {
               className="h-16 w-auto max-w-[170px]"
             />
           )}
-          {!collapsed ? (
-            <button
-              type="button"
-              onClick={() => {
-                persistUserPreference(true)
-                setCollapsed(true)
-              }}
-              className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
-              aria-label="Collapse sidebar"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          ) : null}
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">

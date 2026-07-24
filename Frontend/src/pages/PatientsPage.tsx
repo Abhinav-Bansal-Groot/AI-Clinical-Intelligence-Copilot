@@ -122,7 +122,15 @@ export function PatientsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="w-full min-w-[720px] table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[26%]" />
+              <col className="w-[8%]" />
+              <col className="w-[10%]" />
+              <col className="w-[28%]" />
+              <col className="w-[14%]" />
+              <col className="w-[14%]" />
+            </colgroup>
             <thead className="bg-slate-50 text-slate-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Patient</th>
@@ -152,22 +160,26 @@ export function PatientsPage() {
                     key={patient.id}
                     className="border-t border-slate-100 transition hover:bg-teal-50/40"
                   >
-                    <td className="px-4 py-3.5">
+                    <td className="truncate px-4 py-3.5">
                       <button
                         type="button"
                         onClick={() => navigate(`/patients/${patient.id}`)}
-                        className="cursor-pointer text-left font-medium text-slate-900 hover:text-teal-700 hover:underline"
+                        className="cursor-pointer truncate text-left font-medium text-slate-900 hover:text-teal-700 hover:underline"
                       >
                         {getPatientName(patient)}
                       </button>
                       <PatientIdCopy patientId={patient.id} />
                     </td>
                     <td className="px-4 py-3.5 text-slate-700">{patient.age ?? '-'}</td>
-                    <td className="px-4 py-3.5 text-slate-700">{patient.gender || '-'}</td>
-                    <td className="max-w-xs truncate px-4 py-3.5 text-slate-700">
+                    <td className="truncate px-4 py-3.5 text-slate-700">
+                      {patient.gender || '-'}
+                    </td>
+                    <td className="truncate px-4 py-3.5 text-slate-700" title={patient.conditions || undefined}>
                       {patient.conditions || '-'}
                     </td>
-                    <td className="px-4 py-3.5 text-slate-700">{patient.last_visit || '-'}</td>
+                    <td className="truncate px-4 py-3.5 text-slate-700">
+                      {patient.last_visit || '-'}
+                    </td>
                     <td className="px-4 py-3.5">
                       <span
                         className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${riskBadgeClass(patient.risk_level)}`}

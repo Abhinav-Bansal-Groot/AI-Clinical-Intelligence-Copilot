@@ -44,10 +44,8 @@ export function KnowledgePage() {
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const typewriter = useTypewriterReveal(1)
-  const { containerRef, bottomRef, handleScroll, pinToBottom } = useChatAutoScroll([
-    messages,
-    streaming,
-  ])
+  const { containerRef, bottomRef, handleScroll, handleUserScrollIntent, pinToBottom } =
+    useChatAutoScroll([messages, streaming])
 
   useEffect(() => {
     preservedKnowledgeMessages = messages
@@ -175,6 +173,8 @@ export function KnowledgePage() {
         <div
           ref={containerRef}
           onScroll={handleScroll}
+          onWheel={handleUserScrollIntent}
+          onTouchMove={handleUserScrollIntent}
           className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4"
         >
           {messages.length === 0 ? (

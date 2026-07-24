@@ -46,10 +46,8 @@ export function DashboardCopilot() {
   const [error, setError] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const typewriter = useTypewriterReveal(1)
-  const { containerRef, bottomRef, handleScroll, pinToBottom } = useChatAutoScroll([
-    messages,
-    streaming,
-  ])
+  const { containerRef, bottomRef, handleScroll, handleUserScrollIntent, pinToBottom } =
+    useChatAutoScroll([messages, streaming])
 
   useEffect(() => {
     preservedDashboardMessages = messages
@@ -252,6 +250,8 @@ export function DashboardCopilot() {
             <div
               ref={containerRef}
               onScroll={handleScroll}
+              onWheel={handleUserScrollIntent}
+              onTouchMove={handleUserScrollIntent}
               className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-slate-50 px-4 py-5"
             >
               {messages.length === 0 ? (
